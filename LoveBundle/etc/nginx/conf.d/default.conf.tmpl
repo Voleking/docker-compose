@@ -1,0 +1,60 @@
+server {
+  listen 443 ssl default_server fastopen=512;
+  listen [::]:443 ssl default_server fastopen=512;
+
+  ssl_certificate /etc/letsencrypt/live/${domain}/fullchain.pem;
+  ssl_certificate_key /etc/letsencrypt/live/${domain}/privkey.pem;
+
+  root /usr/share/nginx/html/;
+
+  index index.html;
+
+  server_name _;
+
+  location / {
+    # First attempt to serve request as file, then
+    # as directory, then fall back to displaying a 404.
+    try_files $uri $uri/ =404;
+  }
+
+  location /${wsPath} {
+    # access_log off;
+    if ($http_upgrade = "websocket") {
+      proxy_pass http://127.0.0.1:12345;
+    }
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $http_host;
+    proxy_intercept_errors on;
+  }
+
+  error_page 400 404 /404.html;
+
+  # redirect server error pages to the static page /50x.html
+  error_page 500 502 503 504  /50x.html;
+  location = /50x.html {
+    root /usr/share/nginx/html;
+  }
+}
+
+server {
+  listen 80 fastopen=512;
+  listen [::]:80 fastopen=512;
+
+  server_name _;
+
+  location = / {
+    if ($http_upgrade = "websocket") {
+      proxy_pass http://127.0.0.1:8080;
+    }
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $http_host;
+    proxy_intercept_errors on;
+  }
+  if ($http_upgrade = "") {
+    return 301 https://$host$request_uri;
+  }
+}

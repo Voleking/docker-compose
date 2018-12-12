@@ -1,0 +1,14 @@
+{
+    "server": ["[::1]", "127.0.0.1"],
+    "mode":"tcp_and_udp",
+    "server_port":8080,
+    "local_port":1080,
+    "password":"${password}",
+    "timeout":600,
+    "udp_timeout":600,
+    "method":"chacha20-ietf-poly1305",
+    "fast_open":true,
+    "ipv6_first":true,
+    "plugin":"obfs-server",
+    "plugin_opts":"obfs=http;reverse_proxy;fast-open"
+}

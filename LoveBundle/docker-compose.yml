@@ -1,0 +1,29 @@
+version: '3'
+
+services:
+  nginx:
+    image: nginx
+    container_name: nginx
+    volumes:
+      - ./etc/nginx/conf.d:/etc/nginx/conf.d
+      - ./etc/letsencrypt/:/etc/letsencrypt/:ro
+      - ./etc/nginx/html:/usr/share/nginx/html/
+      - ./var/log/nginx/:/var/log/nginx
+    network_mode: "host"
+    restart: unless-stopped
+  v2ray:
+    image: v2ray/official
+    container_name: v2ray
+    volumes:
+      - ./etc/v2ray/:/etc/v2ray
+      - ./var/log/v2ray:/var/log/v2ray/
+    network_mode: "host"
+    restart: unless-stopped
+  shadowsocks-libev:
+    image: shadowsocks-libev
+    build: ./dockerfile/shadowsocks-libev
+    container_name: shadowsocks-libev
+    volumes:
+      - ./etc/shadowsocks-libev/:/etc/shadowsocks-libev/
+    network_mode: "host"
+    restart: unless-stopped

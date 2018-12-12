@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+DIR="$( cd "$(dirname "$(dirname "${BASH_SOURCE[0]}")")" >/dev/null && pwd )"
+
+if [ ! -d "${DIR}/etc/letsencrypt" ]; then
+  docker run -it --rm -p 80:80 \
+  -v ${DIR}/etc/letsencrypt/:/etc/letsencrypt \
+  -v ${DIR}/var/log/letsencrypt:/var/log/letsencrypt \
+  certbot/certbot \
+  certonly --standalone \
+  --agree-tos --no-eff-email \
+  -d ${domain}
+  
+  (crontab -l 2>/dev/null; echo "0 3 1 * * ${DIR}/scripts/cerbot") | crontab -
+else
+  docker-compose -f ${DIR}/docker-compose.yml stop && \
+  docker run -it --rm -p 80:80 \
+  -v ${DIR}/etc/letsencrypt/:/etc/letsencrypt \
+  -v ${DIR}/var/log/letsencrypt:/var/log/letsencrypt \
+  certbot/certbot renew && \
+  docker-compose -f ${DIR}/docker-compose.yml start
+fi

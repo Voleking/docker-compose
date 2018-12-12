@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+cfgs=(
+  etc/nginx/conf.d/default.conf
+  etc/v2ray/config.json
+  etc/shadowsocks-libev/config.json
+)
+
+sudo -v
+while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
+
+if [ ! -f "${DIR}/etc/nginx/conf.d/default.conf" ]; then
+  read -p "Please enter your domain: " domain
+  UUID=$(cat /proc/sys/kernel/random/uuid)
+  password=$(openssl rand -base64 12)
+  wsPath=$(< /dev/urandom tr -dc [:alnum:] | head -c8)
+
+  for cfg in "${cfgs[@]}"
+  do
+    sed \
+      -e "s|\${domain}|$domain|g" \
+      -e "s|\${UUID}|$UUID|g" \
+      -e "s|\${password}|$password|g" \
+      -e "s|\${wsPath}|$wsPath|g" \
+      ${DIR}/$cfg.tmpl > ${DIR}/$cfg
+  done
+fi
+
+sed -ie "s|\${domain}|$domain|g" ${DIR}/scripts/cerbot
+. ${DIR}/scripts/cerbot
+
+
+if [ ! -f /etc/sysctl.conf.bak ]; then
+  sudo mv /etc/sysctl.conf{,.bak} && sudo mv ${DIR}/etc/sysctl.conf /etc/sysctl.conf && sudo sysctl -p
+fi
+
+docker-compose -f ${DIR}/docker-compose.yml up -d
+
+[[ -v UUID ]] && echo UUID=${UUID} && echo password=${password} && echo wsPath=${wsPath}
