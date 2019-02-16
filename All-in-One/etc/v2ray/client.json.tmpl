@@ -1,0 +1,42 @@
+{
+  "loglevel": {
+    "level": "info"
+  },
+  "inbounds": [{
+    "listen": "127.0.0.1",
+    "port": 1080,
+    "protocol": "socks",
+    "settings": { "udp": true },
+    "sniffing": {
+      "enabled": true,
+      "destOverride": ["http", "tls"]
+    }
+  }],
+  "outbounds": [{
+    "protocol": "vmess",
+    "settings": {
+      "vnext": [{
+        "address": "${domain}",
+        "port": 443,
+        "users": [{
+            "id": "${UUID}",
+            "alterId": 16,
+            "security": "none"
+        }]
+      }]
+    },
+    "streamSettings": {
+      "network": "ws",
+      "security": "tls",
+      "wsSettings": { "path": "/${wsPath}" },
+      "sockopt": { "tcpFastOpen": true }
+    },
+    "mux": { "enabled": true }
+  }],
+  "dns": {
+    "servers": [
+      "1.0.0.1",
+      "localhost"
+    ]
+  }
+}
